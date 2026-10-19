@@ -44,6 +44,7 @@ button,input,select{font:inherit}
 .bar .nm{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .bar .tm{flex:0 100 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:12px;font-weight:600;opacity:.92;margin-left:4px}
 .bar.cut-l{border-left-width:0}
+.bar.mini{padding:0 14px 0 6px}
 .c-gold{background:linear-gradient(#f9d46d,#eebb36)} .c-green{background:linear-gradient(#7fcf7d,#5bb35a)}
 .c-blue{background:linear-gradient(#5b9ee9,#3d80d1)} .c-red{background:linear-gradient(#ec756e,#cf4f48)}
 .c-purple{background:linear-gradient(#ab88e2,#8a62c6)} .c-teal{background:linear-gradient(#55c9ba,#32a495)}
@@ -146,12 +147,9 @@ function groupKey(ev){
   return base || n;
 }
 
-/* smallest bar width (px) that still shows the icon and the whole name */
-var measure = document.createElement("canvas").getContext("2d");
+/* smallest bar width (px): just enough to show the emoji (the name appears if the bar is wider) */
 function minBarPx(ev){
-  measure.font = '800 19px "Trebuchet MS","Segoe UI",Verdana,sans-serif';
-  var w = measure.measureText(String(ev.name || "")).width;
-  return Math.ceil(4 + 10 + (ev.icon ? 36 : 0) + w + 12 + 22 + 6);
+  return ev.icon ? 56 : 30;
 }
 
 function occurrences(ev, a, b){
@@ -230,6 +228,7 @@ function render(){
         var chopped = it.short && ((100 - left) / 100 * boardW < it.minPx);
         if (it.e <= winB && !chopped) cls += " arrow";
         if (it.s < winA) cls += " cut-l";
+        if (it.short) cls += " mini";
         /* short bars keep their true start position; at the edge of the week they are cut short instead of shifted */
         var pos = it.short
           ? 'left:' + left + '%;width:min(' + it.minPx + 'px,calc(100% - ' + left + '%))'
