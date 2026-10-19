@@ -1,7 +1,7 @@
 [
   {"name":"Vault Trap 1","icon":"🏦","section":"Events","color":"teal","start":"2026-10-20T01:00","length":30,"lengthUnit":"minutes","every":2,"everyUnit":"days","times":0},
   {"name":"Vault Trap 2","icon":"🏦","section":"Events","color":"teal","start":"2026-10-20T22:00","length":30,"lengthUnit":"minutes","every":2,"everyUnit":"days","times":0},
-  {"name":"Mafia","icon":👨‍🦽","section":"Events","color":"teal","start":"2026-10-27T00:00","length":1,"lengthUnit":"hours","every":14,"everyUnit":"days","times":0},
+  {"name":"Mafia","icon":"👨‍🦽","section":"Events","color":"teal","start":"2026-10-27T00:00","length":1,"lengthUnit":"hours","every":14,"everyUnit":"days","times":0},
   {"name":"Mafia","icon":"👨‍🦽","section":"Events","color":"teal","start":"2026-10-29T00:00","length":1,"lengthUnit":"hours","every":14,"everyUnit":"days","times":0},
   {"name":"SVS Prep","icon":"🪙","section":"Events","color":"red","start":"2026-10-26T00:00","length":5,"lengthUnit":"days","every":28,"everyUnit":"days","times":0},
   {"name":"SVS Battle","icon":"⚔","section":"Events","color":"red","start":"2026-10-31T12:00","length":6,"lengthUnit":"hours","every":28,"everyUnit":"days","times":0},
