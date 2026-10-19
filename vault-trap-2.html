@@ -29,6 +29,7 @@ body{background:var(--bg);color:var(--ink);font-family:"Trebuchet MS","Segoe UI"
 .body{padding:14px 18px 18px}
 .sect{background:var(--sect);color:#fff;font-weight:800;padding:8px 12px;font-size:22px;border-left:8px solid #fff;margin:18px 0 12px;border-radius:2px}
 .sect:first-child{margin-top:4px}
+.sub{font-size:20px;font-weight:800;color:#2f4a6b;margin:16px 0 6px;padding-bottom:3px;border-bottom:3px solid var(--accent)}
 .txt p{font-size:19px;line-height:1.55;margin:0 0 12px}
 .txt a{color:#1d5fb0;font-weight:700}
 .txt ul{margin:0 0 12px;padding-left:26px;font-size:19px;line-height:1.55}
@@ -47,7 +48,7 @@ figcaption{padding:8px 12px;font-size:16px;font-weight:600;color:#3a4a5a;text-al
 .lb img{max-width:100%;max-height:84vh;border-radius:8px;box-shadow:0 6px 30px #000}
 .lb div{color:#fff;font-size:20px;font-weight:700;margin-top:10px;text-align:center}
 @media (max-width:600px){
-  .hero h2{font-size:28px} .hero .big{font-size:46px} .txt p,.txt ul{font-size:17px} .sect{font-size:19px}
+  .hero h2{font-size:28px} .hero .big{font-size:46px} .txt p,.txt ul{font-size:17px} .sect{font-size:19px} .sub{font-size:18px}
 }
 </style>
 </head>
@@ -75,37 +76,50 @@ figcaption{padding:8px 12px;font-size:16px;font-weight:600;color:#3a4a5a;text-al
    How to use:
    1. Copy this file and name it after your event (for example vault-trap-1.html).
    2. Change the info below. Keep the quote marks and commas where they are.
-   3. Add or remove whole { ... } blocks in "sections" to add or remove sections.
+   3. The page content is the "content" list. It shows from top to bottom, in the same
+      order you write it. Each { ... } line is ONE block, and you can use as many of
+      each kind as you like, in any order. Every block ends with a comma (except the last).
+
+      Block kinds:
+        { heading: "Big blue heading" },
+        { subheading: "Smaller heading with an underline" },
+        { text: "A paragraph" },
+        { text: ["Paragraph one", "Paragraph two"] },
+        { bullets: ["Point one", "Point two"] },
+        { note: "Yellow tip box" },
+        { images: [ { src: "images/map.png", caption: "Optional caption" } ], layout: "grid" },
+        { links: [ { text: "Button text", url: "https://example.com" } ] },
+
+      Image layout: "grid" = small tiles, "two" = two per row, "full" = one big image per row.
    4. In text you can use basic HTML: <b>bold</b>, <i>italic</i>, <a href="https://...">link</a>.
    5. Image "src" can be a web link (https://...) or a file in your repo (for example images/map.png).
+   6. Emoji: you can paste them directly.
    ========================================================================== */
 var PAGE = {
 
   title:    "Vault Trap",                 /* big title and browser tab name */
-  icon:     "🏦",                     /* emoji shown above the title (type or paste any emoji) */
+  icon:     "\ud83c\udfe6",               /* emoji shown above the title */
   subtitle: "Get that damage",
   color:    "teal",                       /* header accent: blue, gold, green, red, purple or teal */
   back:     "index.html",                 /* where the Back button goes */
 
-  sections: [
+  content: [
 
-    {
-      heading: "Overview",
-      text: [
-        "The goal of this event is to do as much damage as possible"
+    { heading: "Overview" },
+    { text: "The goal of this event is to do as much damage as possible" },
+
+    { heading: "How to do it" },
+
+    { subheading: "HOSTING RALLIES" },
+    { bullets: [
+        "Samuel/Andre/Brooke (if available), or Leon + Scarlett + Lucy",
+        "Example: Samuel/Scarlett/Lucy",
+        "Formation: 3/21/76"
       ]
     },
 
-    {
-      heading: "How to do it",
-      text: [ "HOSTING RALLIES" ],
-      bullets: [
-        "Samuel/Andre/Brooke (if available), or Leon + Scarlet + Lucy⚔️ Formation: 3/21/76",
-        "Example: Samuel/Scarlett/Lucy",
-        "Formation: 3/21/76"
-      ],
-      text: [ "JOINING RALLIES" ],
-      bullets: [
+    { subheading: "JOINING RALLIES" },
+    { bullets: [
         "Squad 1: Vixen + 2 heroes",
         "Squad 2: Sea-ah + 2 heroes",
         "Squad 3: Hikari + 2 heroes",
@@ -113,13 +127,13 @@ var PAGE = {
         "Squad 5: No Heroes only troops",
         "Squad 6: No Heroes only troops",
         "Formation: 3/21/76"
-      ],
-      note: "Formation is Guards/Bikers/Marksmen"
+      ]
     },
 
-    {
-      heading: "Useful links",
-      links: [
+    { note: "Formation is Guards/Bikers/Marksmen" },
+
+    { heading: "Useful links" },
+    { links: [
         { text: "How to: Formations", url: "https://youtube.com/shorts/txLqJ_myTx8" }
       ]
     }
@@ -145,6 +159,7 @@ var PAGE = {
     e.textContent = text;
     return e;
   }
+  function list(v){ return v == null ? [] : (Array.isArray(v) ? v : [v]); }
 
   document.title = PAGE.title || "Event Page";
   document.getElementById("back").href = PAGE.back || "index.html";
@@ -154,21 +169,34 @@ var PAGE = {
   hero.appendChild(plain("h2", "", PAGE.title || ""));
   if (PAGE.subtitle) hero.appendChild(plain("p", "", PAGE.subtitle));
 
-  (PAGE.sections || []).forEach(function(sec){
-    if (sec.heading) body.appendChild(plain("div", "sect", sec.heading));
-    var wrap = el("div", "txt");
-    (sec.text || []).forEach(function(t){ wrap.appendChild(el("p", "", t)); });
-    if (sec.bullets && sec.bullets.length) {
-      var ul = el("ul");
-      sec.bullets.forEach(function(b){ ul.appendChild(el("li", "", b)); });
-      wrap.appendChild(ul);
-    }
-    if (sec.note) wrap.appendChild(el("div", "note", sec.note));
-    body.appendChild(wrap);
+  var lb = document.getElementById("lb");
+  function openLb(im){
+    document.getElementById("lbimg").src = im.src;
+    document.getElementById("lbcap").textContent = im.caption || "";
+    lb.classList.add("show");
+  }
+  lb.addEventListener("click", function(){ lb.classList.remove("show"); });
+  document.addEventListener("keydown", function(e){ if (e.key === "Escape") lb.classList.remove("show"); });
 
-    if (sec.images && sec.images.length) {
-      var g = el("div", "imgs" + (sec.imageLayout === "full" ? " full" : sec.imageLayout === "two" ? " two" : ""));
-      sec.images.forEach(function(im){
+  (PAGE.content || []).forEach(function(b){
+    if (b.heading) body.appendChild(plain("div", "sect", b.heading));
+    if (b.subheading) body.appendChild(plain("div", "sub", b.subheading));
+
+    if (b.text != null || b.bullets || b.note) {
+      var wrap = el("div", "txt");
+      list(b.text).forEach(function(t){ wrap.appendChild(el("p", "", t)); });
+      if (b.bullets && b.bullets.length) {
+        var ul = el("ul");
+        b.bullets.forEach(function(x){ ul.appendChild(el("li", "", x)); });
+        wrap.appendChild(ul);
+      }
+      if (b.note) wrap.appendChild(el("div", "note", b.note));
+      body.appendChild(wrap);
+    }
+
+    if (b.images && b.images.length) {
+      var g = el("div", "imgs" + (b.layout === "full" ? " full" : b.layout === "two" ? " two" : ""));
+      b.images.forEach(function(im){
         var f = el("figure"), img = document.createElement("img");
         img.src = im.src; img.alt = im.caption || ""; img.loading = "lazy";
         img.addEventListener("click", function(){ openLb(im); });
@@ -179,9 +207,9 @@ var PAGE = {
       body.appendChild(g);
     }
 
-    if (sec.links && sec.links.length) {
+    if (b.links && b.links.length) {
       var l = el("div", "links");
-      sec.links.forEach(function(k){
+      b.links.forEach(function(k){
         var a = plain("a", "btn gold", k.text || k.url);
         a.href = k.url; a.target = "_blank"; a.rel = "noopener";
         l.appendChild(a);
@@ -189,15 +217,6 @@ var PAGE = {
       body.appendChild(l);
     }
   });
-
-  var lb = document.getElementById("lb");
-  function openLb(im){
-    document.getElementById("lbimg").src = im.src;
-    document.getElementById("lbcap").textContent = im.caption || "";
-    lb.classList.add("show");
-  }
-  lb.addEventListener("click", function(){ lb.classList.remove("show"); });
-  document.addEventListener("keydown", function(e){ if (e.key === "Escape") lb.classList.remove("show"); });
 })();
 </script>
 </body>
