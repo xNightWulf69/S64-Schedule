@@ -44,7 +44,8 @@ button,input,select{font:inherit}
 .bar .nm{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .bar .tm{flex:0 100 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:12px;font-weight:600;opacity:.92;margin-left:4px}
 .bar.cut-l{border-left-width:0}
-.bar.mini{padding:0 14px 0 6px}
+.bar.mini{padding:0 2px;justify-content:center;container-type:inline-size}
+.bar.mini .ic{font-size:min(28px,75cqw)}
 .c-gold{background:linear-gradient(#f9d46d,#eebb36)} .c-green{background:linear-gradient(#7fcf7d,#5bb35a)}
 .c-blue{background:linear-gradient(#5b9ee9,#3d80d1)} .c-red{background:linear-gradient(#ec756e,#cf4f48)}
 .c-purple{background:linear-gradient(#ab88e2,#8a62c6)} .c-teal{background:linear-gradient(#55c9ba,#32a495)}
@@ -147,9 +148,9 @@ function groupKey(ev){
   return base || n;
 }
 
-/* smallest bar width (px): just enough to show the emoji (the name appears if the bar is wider) */
-function minBarPx(ev){
-  return ev.icon ? 56 : 30;
+/* smallest bar width (px): one third of a day column (the name appears if the bar is wider) */
+function minBarPx(ev, boardW){
+  return Math.max(8, Math.round(boardW / 7 / 3));
 }
 
 function occurrences(ev, a, b){
@@ -184,7 +185,7 @@ function render(){
     var items = [];
     events.forEach(function(ev, idx){
       if (ev.section !== sec) return;
-      var minPx = minBarPx(ev), g = groupKey(ev);
+      var minPx = minBarPx(ev, boardW), g = groupKey(ev);
       occurrences(ev, winA, winB).forEach(function(o){
         var vs = Math.max(o[0], winA), ve = Math.min(o[1], winB);
         var actualPx = (ve - vs) / span * boardW;
@@ -226,7 +227,7 @@ function render(){
         var left = (l - winA) / span * 100, width = (r - l) / span * 100;
         var cls = "bar c-" + (COLORS.indexOf(ev.color) >= 0 ? ev.color : "gold");
         var chopped = it.short && ((100 - left) / 100 * boardW < it.minPx);
-        if (it.e <= winB && !chopped) cls += " arrow";
+        if (it.e <= winB && !chopped && !it.short) cls += " arrow";
         if (it.s < winA) cls += " cut-l";
         if (it.short) cls += " mini";
         /* short bars keep their true start position; at the edge of the week they are cut short instead of shifted */
