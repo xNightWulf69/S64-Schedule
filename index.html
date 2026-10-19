@@ -227,10 +227,12 @@ function render(){
         var ev = it.ev, l = Math.max(it.s, winA), r = Math.min(it.e, winB);
         var left = (l - winA) / span * 100, width = (r - l) / span * 100;
         var cls = "bar c-" + (COLORS.indexOf(ev.color) >= 0 ? ev.color : "gold");
-        if (it.e <= winB) cls += " arrow";
+        var chopped = it.short && ((100 - left) / 100 * boardW < it.minPx);
+        if (it.e <= winB && !chopped) cls += " arrow";
         if (it.s < winA) cls += " cut-l";
+        /* short bars keep their true start position; at the edge of the week they are cut short instead of shifted */
         var pos = it.short
-          ? 'left:min(' + left + '%,calc(100% - ' + it.minPx + 'px));width:' + it.minPx + 'px'
+          ? 'left:' + left + '%;width:min(' + it.minPx + 'px,calc(100% - ' + left + '%))'
           : 'left:' + left + '%;width:calc(' + width + '% - 3px)';
         html += '<div class="' + cls + '" data-i="' + it.idx + '" data-s="' + it.s + '" data-e="' + it.e + '" style="' + pos + '">' +
           '<span class="ic">' + esc(ev.icon) + '</span><span class="nm">' + esc(ev.name) + '</span>' +
