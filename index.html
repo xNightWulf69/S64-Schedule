@@ -134,7 +134,25 @@ function fmtDay(ms){ var d = new Date(ms + OFF); return pad(d.getUTCMonth()+1)+"
 function dayStart(ms){ return Math.floor((ms + OFF) / D) * D - OFF; }
 var DN = ["Sun.","Mon.","Tue.","Wed.","Thu.","Fri.","Sat."];
 
-function unitMs(u){ return u === "hours" ? H : D; }
+function unitMs(u){ return u === "minutes" ? 60000 : (u === "hours" ? H : D); }
+
+/* events in the same row group always share one row.
+   Group = the "group" field if set, otherwise the name without a trailing number (Vault Trap 1 and Vault Trap 2 -> "vault trap") */
+function groupKey(ev){
+  var g = String(ev.group == null ? "" : ev.group).trim().toLowerCase();
+  if (g) return g;
+  var n = String(ev.name == null ? "" : ev.name).trim().toLowerCase();
+  var base = n.replace(/[\s#]*\d+\s*$/, "");
+  return base || n;
+}
+
+/* smallest bar width (px) that still shows the icon and the whole name */
+var measure = document.createElement("canvas").getContext("2d");
+function minBarPx(ev){
+  measure.font = '800 19px "Trebuchet MS","Segoe UI",Verdana,sans-serif';
+  var w = measure.measureText(String(ev.name || "")).width;
+  return Math.ceil(4 + 10 + (ev.icon ? 36 : 0) + w + 12 + 22 + 6);
+}
 
 function occurrences(ev, a, b){
   var s0 = fromInput(ev.start), len = (+ev.length || 0) * unitMs(ev.lengthUnit);
@@ -164,20 +182,44 @@ function render(){
   var html = '<div class="cols">' + ch + '</div>';
   ["Events","Deals"].forEach(function(sec){
     html += '<div class="sect">' + sec + '</div>';
+    var boardW = document.getElementById("board").clientWidth || 1200;
     var items = [];
     events.forEach(function(ev, idx){
       if (ev.section !== sec) return;
-      occurrences(ev, winA, winB).forEach(function(o){ items.push({idx: idx, ev: ev, s: o[0], e: o[1]}); });
+      var minPx = minBarPx(ev), g = groupKey(ev);
+      occurrences(ev, winA, winB).forEach(function(o){
+        var vs = Math.max(o[0], winA), ve = Math.min(o[1], winB);
+        var actualPx = (ve - vs) / span * boardW;
+        var vis = Math.max(ve, vs + (minPx + 3) / boardW * span);
+        items.push({idx: idx, ev: ev, s: o[0], e: o[1], vs: vs, ve: vis, g: g, minPx: minPx, short: actualPx < minPx});
+      });
     });
-    items.sort(function(x, y){ return (Math.max(x.s, winA) - Math.max(y.s, winA)) || (x.idx - y.idx); });
-    /* pack into rows: an item goes on the first row where it does not overlap anything */
+    /* 1. everything in one row group stays together (split only if its own bars would overlap) */
+    var groups = {}, order = [], blocks = [];
+    items.forEach(function(it){ if (!groups[it.g]) { groups[it.g] = []; order.push(it.g); } groups[it.g].push(it); });
+    order.forEach(function(g){
+      var list = groups[g].sort(function(x, y){ return x.vs - y.vs; }), inner = [];
+      list.forEach(function(it){
+        for (var n = 0; n < inner.length; n++) {
+          if (inner[n].end <= it.vs) { inner[n].items.push(it); inner[n].end = it.ve; return; }
+        }
+        inner.push({end: it.ve, items: [it]});
+      });
+      inner.forEach(function(blk){
+        blk.idx = Math.min.apply(null, blk.items.map(function(x){ return x.idx; }));
+        blocks.push(blk);
+      });
+    });
+    blocks.sort(function(x, y){ return x.idx - y.idx; });
+    /* 2. put each block on the first row where none of its bars overlap */
     var lanes = [];
-    items.forEach(function(it){
-      var vs = Math.max(it.s, winA), ve = Math.min(it.e, winB), placed = false;
+    blocks.forEach(function(blk){
       for (var n = 0; n < lanes.length; n++) {
-        if (lanes[n].end <= vs) { lanes[n].items.push(it); lanes[n].end = ve; placed = true; break; }
+        var ok = true;
+        lanes[n].items.forEach(function(x){ blk.items.forEach(function(y){ if (x.vs < y.ve && y.vs < x.ve) ok = false; }); });
+        if (ok) { blk.items.forEach(function(y){ lanes[n].items.push(y); }); return; }
       }
-      if (!placed) lanes.push({end: ve, items: [it]});
+      lanes.push({items: blk.items.slice()});
     });
     lanes.forEach(function(lane){
       html += '<div class="row">';
@@ -187,7 +229,10 @@ function render(){
         var cls = "bar c-" + (COLORS.indexOf(ev.color) >= 0 ? ev.color : "gold");
         if (it.e <= winB) cls += " arrow";
         if (it.s < winA) cls += " cut-l";
-        html += '<div class="' + cls + '" data-i="' + it.idx + '" data-s="' + it.s + '" data-e="' + it.e + '" style="left:' + left + '%;width:calc(' + width + '% - 3px)">' +
+        var pos = it.short
+          ? 'left:min(' + left + '%,calc(100% - ' + it.minPx + 'px));width:' + it.minPx + 'px'
+          : 'left:' + left + '%;width:calc(' + width + '% - 3px)';
+        html += '<div class="' + cls + '" data-i="' + it.idx + '" data-s="' + it.s + '" data-e="' + it.e + '" style="' + pos + '">' +
           '<span class="ic">' + esc(ev.icon) + '</span><span class="nm">' + esc(ev.name) + '</span>' +
           '<span class="tm">' + fmt(it.s) + ' - ' + fmt(it.e) + '</span></div>';
       });
@@ -245,7 +290,7 @@ document.addEventListener("click", function(e){
   }
 });
 document.getElementById("scroll").addEventListener("scroll", hidePop);
-window.addEventListener("resize", hidePop);
+window.addEventListener("resize", function(){ hidePop(); render(); });
 
 /* ----- data ----- */
 function save(){
@@ -274,9 +319,10 @@ function buildList(){
       '<label>Color<select data-k="color">' + opt(COLORS, e.color) + '</select></label>' +
       '<label>Starts (server time)<input type="datetime-local" data-k="start" value="' + esc(e.start) + '"></label>' +
       '<label>Icon <span class="hint">(any emoji)</span><input data-k="icon" value="' + esc(e.icon) + '"></label>' +
-      '<label>Lasts<div class="pair"><input type="number" min="0" step="any" data-k="length" value="' + esc(e.length) + '"><select data-k="lengthUnit">' + opt(["hours","days"], e.lengthUnit) + '</select></div></label>' +
-      '<label>Repeats every <span class="hint">(0 = never)</span><div class="pair"><input type="number" min="0" step="any" data-k="every" value="' + esc(e.every) + '"><select data-k="everyUnit">' + opt(["hours","days"], e.everyUnit) + '</select></div></label>' +
+      '<label>Lasts<div class="pair"><input type="number" min="0" step="any" data-k="length" value="' + esc(e.length) + '"><select data-k="lengthUnit">' + opt(["minutes","hours","days"], e.lengthUnit) + '</select></div></label>' +
+      '<label>Repeats every <span class="hint">(0 = never)</span><div class="pair"><input type="number" min="0" step="any" data-k="every" value="' + esc(e.every) + '"><select data-k="everyUnit">' + opt(["minutes","hours","days"], e.everyUnit) + '</select></div></label>' +
       '<label>Number of times <span class="hint">(0 = forever)</span><input type="number" min="0" data-k="times" value="' + esc(e.times) + '"></label>' +
+      '<label class="full">Row group <span class="hint">(optional: events with the same group always share one row; blank = name without its trailing number)</span><input data-k="group" value="' + esc(e.group) + '"></label>' +
       '</div><div class="acts"><button class="btn sm" data-a="up">Up</button><button class="btn sm" data-a="down">Down</button><button class="btn sm" data-a="dup">Duplicate</button><button class="btn sm red" data-a="del">Delete</button></div></div>';
   });
   document.getElementById("list").innerHTML = h || '<p class="note">No events yet. Press Add event.</p>';
