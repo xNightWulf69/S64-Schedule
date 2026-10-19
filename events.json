@@ -1,12 +1,12 @@
 [
-  {"name":"Alliance Mobilization","icon":"\ud83c\udfc6","section":"Events","color":"gold","start":"2026-10-19T00:00","length":7,"lengthUnit":"days","every":0,"everyUnit":"days","times":0},
-  {"name":"Alliance Training","icon":"\ud83d\udd28","section":"Events","color":"gold","start":"2026-10-19T00:00","length":7,"lengthUnit":"days","every":0,"everyUnit":"days","times":0},
-  {"name":"Hot Pursuit","icon":"\u2b50","section":"Events","color":"green","start":"2026-10-16T00:00","length":4,"lengthUnit":"days","every":0,"everyUnit":"days","times":0},
+  {"name":"Alliance Mobilization","icon":"\ud83c\udfc6","section":"Events","color":"gold","start":"2026-10-19T00:00","length":7,"lengthUnit":"days","every":14,"everyUnit":"days","times":0},
+  {"name":"Alliance Training","icon":"\ud83d\udd28","section":"Events","color":"gold","start":"2026-10-19T00:00","length":7,"lengthUnit":"days","every":14,"everyUnit":"days","times":0},
+  {"name":"Hot Pursuit","icon":"\u2b50","section":"Events","color":"green","start":"2026-10-17T00:00","length":3,"lengthUnit":"days","every":0,"everyUnit":"days","times":0},
   {"name":"Arms Race","icon":"\ud83e\udd16","section":"Events","color":"blue","start":"2026-10-19T00:00","length":2,"lengthUnit":"days","every":4,"everyUnit":"days","times":0},
-  {"name":"Officer Promotion","icon":"\ud83c\udf96","section":"Events","color":"blue","start":"2026-10-21T00:00","length":2,"lengthUnit":"days","every":0,"everyUnit":"days","times":0},
-  {"name":"Precinct Powerplay","icon":"\u2694","section":"Events","color":"green","start":"2026-10-19T00:00","length":7,"lengthUnit":"days","every":0,"everyUnit":"days","times":0},
+  {"name":"Officer Program","icon":"\ud83c\udf96","section":"Events","color":"blue","start":"2026-10-21T00:00","length":2,"lengthUnit":"days","every":0,"everyUnit":"days","times":0},
+  {"name":"Precinct Powerplay","icon":"\u2694","section":"Events","color":"green","start":"2026-10-19T00:00","length":7,"lengthUnit":"days","every":14,"everyUnit":"days","times":0},
   {"name":"Dawn of Justice","icon":"\ud83d\ude93","section":"Events","color":"gold","start":"2026-10-20T00:00","length":3,"lengthUnit":"days","every":0,"everyUnit":"days","times":0},
   {"name":"Wild West","icon":"\ud83d\udd2b","section":"Events","color":"blue","start":"2026-10-21T00:00","length":4,"lengthUnit":"days","every":0,"everyUnit":"days","times":0},
   {"name":"Target Deal","icon":"\ud83c\udfaf","section":"Deals","color":"gold","start":"2026-10-23T00:00","length":1,"lengthUnit":"days","every":0,"everyUnit":"days","times":0},
-  {"name":"Heroes Unite","icon":"\ud83d\udea9","section":"Deals","color":"gold","start":"2026-10-17T00:00","length":7,"lengthUnit":"days","every":0,"everyUnit":"days","times":0}
+  {"name":"Heroes Unite","icon":"\ud83d\udea9","section":"Deals","color":"gold","start":"2026-10-17T00:00","length":14,"lengthUnit":"days","every":1,"everyUnit":"days","times":0}
 ]
