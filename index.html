@@ -57,6 +57,9 @@ button,input,select{font:inherit}
 .pop.show{display:flex}
 .pop .pi{font-size:44px;line-height:1;flex:none}
 .pop .pn{font-size:22px;font-weight:800;line-height:1.2;overflow-wrap:anywhere}
+.pop.pinned{pointer-events:auto}
+.pop .pbtn{display:inline-block;margin-top:10px;padding:10px 16px;border-radius:10px;background:#e9a53c;color:#2b1d08;font-weight:800;font-size:18px;text-decoration:none;box-shadow:0 2px 0 #0004}
+.pop .pbtn:hover{filter:brightness(1.1)}
 .pop .pt{font-size:18px;font-weight:600;color:#3a4a5a;line-height:1.35}
 /* editor */
 .drawer{position:fixed;top:0;right:0;bottom:0;width:min(520px,100vw);background:#f7f5ee;z-index:10;transform:translateX(100%);transition:transform .2s;display:flex;flex-direction:column;box-shadow:-6px 0 20px #0008}
@@ -259,7 +262,9 @@ function showPop(bar, x){
   popBar = bar;
   pop.style.borderColor = COLORHEX[ev.color] || COLORHEX.gold;
   pop.innerHTML = '<div class="pi">' + esc(ev.icon) + '</div><div><div class="pn">' + esc(ev.name) + '</div>' +
-    '<div class="pt">Starts: ' + fmt(+bar.dataset.s) + '</div><div class="pt">Ends: ' + fmt(+bar.dataset.e) + '</div></div>';
+    '<div class="pt">Starts: ' + fmt(+bar.dataset.s) + '</div><div class="pt">Ends: ' + fmt(+bar.dataset.e) + '</div>' +
+    (pinned ? '<a class="pbtn" href="' + esc(pageFor(ev)) + '">Open Event Page</a>' : '') + '</div>';
+  pop.classList.toggle("pinned", pinned);
   pop.classList.add("show");
   var r = bar.getBoundingClientRect(), w = pop.offsetWidth, h = pop.offsetHeight;
   var vw = document.documentElement.clientWidth, vh = document.documentElement.clientHeight;
@@ -270,7 +275,7 @@ function showPop(bar, x){
   if (top + h > vh - 8) top = Math.max(8, vh - h - 8);
   pop.style.left = left + "px"; pop.style.top = top + "px";
 }
-function hidePop(){ pop.classList.remove("show"); pinned = false; popBar = null; }
+function hidePop(){ pop.classList.remove("show"); pop.classList.remove("pinned"); pinned = false; popBar = null; }
 
 var board = document.getElementById("board");
 board.addEventListener("pointerover", function(e){
@@ -282,14 +287,19 @@ board.addEventListener("pointerout", function(e){
   var b = e.target.closest(".bar");
   if (b && !(e.relatedTarget && b.contains(e.relatedTarget))) hidePop();
 });
+/* page for an event: the "Page link" field if set, otherwise the name in lower case with spaces turned into - (Vault Trap 1 -> vault-trap-1.html) */
+function pageFor(ev){
+  var custom = String(ev.page == null ? "" : ev.page).trim();
+  if (custom) return custom;
+  var slug = String(ev.name || "").trim().toLowerCase().replace(/\s+/g, "-").replace(/[^\p{L}\p{N}_-]/gu, "");
+  return encodeURIComponent(slug || "event") + ".html";
+}
 document.addEventListener("click", function(e){
+  if (e.target.closest && e.target.closest("#pop")) return;   /* clicks inside the dialog (the button) are left alone */
   var b = e.target.closest ? e.target.closest(".bar") : null;
-  if (b) {
-    if (pinned && popBar === b) { hidePop(); return; }
-    pinned = true; showPop(b, e.clientX);
-  } else {
-    hidePop();
-  }
+  if (!b) { hidePop(); return; }
+  if (pinned && popBar === b) { hidePop(); return; }
+  pinned = true; showPop(b, e.clientX);
 });
 document.getElementById("scroll").addEventListener("scroll", hidePop);
 window.addEventListener("resize", function(){ hidePop(); render(); });
@@ -325,6 +335,7 @@ function buildList(){
       '<label>Repeats every <span class="hint">(0 = never)</span><div class="pair"><input type="number" min="0" step="any" data-k="every" value="' + esc(e.every) + '"><select data-k="everyUnit">' + opt(["minutes","hours","days"], e.everyUnit) + '</select></div></label>' +
       '<label>Number of times <span class="hint">(0 = forever)</span><input type="number" min="0" data-k="times" value="' + esc(e.times) + '"></label>' +
       '<label class="full">Row group <span class="hint">(optional: events with the same group always share one row; blank = name without its trailing number)</span><input data-k="group" value="' + esc(e.group) + '"></label>' +
+      '<label class="full">Page link <span class="hint">(optional: blank = name with spaces as -, e.g. vault-trap-1.html)</span><input data-k="page" value="' + esc(e.page) + '"></label>' +
       '</div><div class="acts"><button class="btn sm" data-a="up">Up</button><button class="btn sm" data-a="down">Down</button><button class="btn sm" data-a="dup">Duplicate</button><button class="btn sm red" data-a="del">Delete</button></div></div>';
   });
   document.getElementById("list").innerHTML = h || '<p class="note">No events yet. Press Add event.</p>';
