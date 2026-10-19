@@ -37,11 +37,12 @@ button,input,select{font:inherit}
 .col.today{background:var(--today)}
 .sect{position:relative;z-index:1;background:var(--sect);color:#fff;font-weight:800;padding:6px 10px;font-size:18px;border-left:6px solid #fff;margin-top:0}
 .row{position:relative;z-index:1;height:78px;border-bottom:1px solid var(--line)}
-.bar{position:absolute;top:14px;height:50px;display:flex;align-items:center;gap:8px;padding:0 22px 0 10px;color:#fff;font-weight:800;font-size:19px;text-shadow:0 2px 0 #0006,0 0 3px #0005;border:2px solid #0003;border-radius:4px;overflow:hidden;white-space:nowrap}
+.bar{position:absolute;top:14px;height:50px;display:flex;align-items:center;gap:8px;padding:0 22px 0 10px;color:#fff;font-weight:800;font-size:19px;text-shadow:0 2px 0 #0006,0 0 3px #0005;border:2px solid #0003;border-radius:4px;overflow:hidden;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .bar.arrow{clip-path:polygon(0 0,calc(100% - 22px) 0,100% 50%,calc(100% - 22px) 100%,0 100%);border-radius:0}
 .bar .ic{font-size:28px;text-shadow:none;flex:none}
-.bar .nm{overflow:hidden;text-overflow:ellipsis}
-.bar .tm{font-size:12px;font-weight:600;opacity:.92;margin-left:4px}
+/* the date shrinks first (ellipsis), the name only shrinks once the date is gone */
+.bar .nm{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.bar .tm{flex:0 100 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:12px;font-weight:600;opacity:.92;margin-left:4px}
 .bar.cut-l{border-left-width:0}
 .c-gold{background:linear-gradient(#f9d46d,#eebb36)} .c-green{background:linear-gradient(#7fcf7d,#5bb35a)}
 .c-blue{background:linear-gradient(#5b9ee9,#3d80d1)} .c-red{background:linear-gradient(#ec756e,#cf4f48)}
@@ -49,6 +50,12 @@ button,input,select{font:inherit}
 .now{position:absolute;top:0;bottom:0;width:3px;background:#e0372f;z-index:2;pointer-events:none}
 .empty{position:relative;z-index:1;padding:14px;color:#2f4a6b;font-weight:700}
 .foot{background:#8fb0d1;color:#38557a;text-align:center;font-weight:700;padding:8px;font-size:16px}
+/* popout */
+.pop{position:fixed;left:0;top:0;z-index:30;display:none;align-items:center;gap:14px;background:#fff;color:#1d2b3a;border:4px solid var(--gold);border-radius:14px;padding:12px 18px;box-shadow:0 6px 22px #000a;max-width:calc(100vw - 16px);pointer-events:none}
+.pop.show{display:flex}
+.pop .pi{font-size:44px;line-height:1;flex:none}
+.pop .pn{font-size:22px;font-weight:800;line-height:1.2;overflow-wrap:anywhere}
+.pop .pt{font-size:18px;font-weight:600;color:#3a4a5a;line-height:1.35}
 /* editor */
 .drawer{position:fixed;top:0;right:0;bottom:0;width:min(520px,100vw);background:#f7f5ee;z-index:10;transform:translateX(100%);transition:transform .2s;display:flex;flex-direction:column;box-shadow:-6px 0 20px #0008}
 .drawer.open{transform:none}
@@ -83,9 +90,11 @@ textarea{width:100%;height:140px;font-family:Consolas,monospace;font-size:12px;m
   <div class="clock" id="clock"></div>
   <div class="banner" id="banner"><span>You are viewing your own unsaved-to-site edits (stored only in this browser).</span><button class="btn sm red" id="discard">Discard my edits</button></div>
   <div class="days" id="days"></div>
-  <div class="scroll"><div class="board" id="board"></div></div>
+  <div class="scroll" id="scroll"><div class="board" id="board"></div></div>
   <div class="foot">All events are subject to the in-game schedule</div>
 </div>
+
+<div class="pop" id="pop"></div>
 
 <div class="drawer" id="drawer">
   <div class="dh"><h2>Edit events and deals</h2><button class="btn sm" id="close">Close</button></div>
@@ -114,6 +123,7 @@ var KEY = "allianceCal.v1";
 
 var H = 3600000, D = 86400000, OFF = SERVER_UTC_OFFSET_HOURS * H;
 var COLORS = ["gold","green","blue","red","purple","teal"];
+var COLORHEX = {gold:"#eebb36",green:"#5bb35a",blue:"#3d80d1",red:"#cf4f48",purple:"#8a62c6",teal:"#32a495"};
 var published = [], events = [], weekShift = 0;
 
 function pad(n){ return (n < 10 ? "0" : "") + n; }
@@ -153,27 +163,37 @@ function render(){
   document.getElementById("days").innerHTML = dh;
   var html = '<div class="cols">' + ch + '</div>';
   ["Events","Deals"].forEach(function(sec){
-    var list = events.filter(function(e){ return e.section === sec; });
     html += '<div class="sect">' + sec + '</div>';
-    var shown = 0;
-    list.forEach(function(ev){
-      var occ = occurrences(ev, winA, winB);
-      if (!occ.length) return;
-      shown++;
+    var items = [];
+    events.forEach(function(ev, idx){
+      if (ev.section !== sec) return;
+      occurrences(ev, winA, winB).forEach(function(o){ items.push({idx: idx, ev: ev, s: o[0], e: o[1]}); });
+    });
+    items.sort(function(x, y){ return (Math.max(x.s, winA) - Math.max(y.s, winA)) || (x.idx - y.idx); });
+    /* pack into rows: an item goes on the first row where it does not overlap anything */
+    var lanes = [];
+    items.forEach(function(it){
+      var vs = Math.max(it.s, winA), ve = Math.min(it.e, winB), placed = false;
+      for (var n = 0; n < lanes.length; n++) {
+        if (lanes[n].end <= vs) { lanes[n].items.push(it); lanes[n].end = ve; placed = true; break; }
+      }
+      if (!placed) lanes.push({end: ve, items: [it]});
+    });
+    lanes.forEach(function(lane){
       html += '<div class="row">';
-      occ.forEach(function(o){
-        var l = Math.max(o[0], winA), r = Math.min(o[1], winB);
+      lane.items.forEach(function(it){
+        var ev = it.ev, l = Math.max(it.s, winA), r = Math.min(it.e, winB);
         var left = (l - winA) / span * 100, width = (r - l) / span * 100;
         var cls = "bar c-" + (COLORS.indexOf(ev.color) >= 0 ? ev.color : "gold");
-        if (o[1] <= winB) cls += " arrow";
-        if (o[0] < winA) cls += " cut-l";
-        html += '<div class="' + cls + '" style="left:' + left + '%;width:' + width + '%" title="' + esc(ev.name) + ": " + fmt(o[0]) + " to " + fmt(o[1]) + '">' +
+        if (it.e <= winB) cls += " arrow";
+        if (it.s < winA) cls += " cut-l";
+        html += '<div class="' + cls + '" data-i="' + it.idx + '" data-s="' + it.s + '" data-e="' + it.e + '" style="left:' + left + '%;width:calc(' + width + '% - 3px)">' +
           '<span class="ic">' + esc(ev.icon) + '</span><span class="nm">' + esc(ev.name) + '</span>' +
-          '<span class="tm">' + fmt(o[0]) + ' - ' + fmt(o[1]) + '</span></div>';
+          '<span class="tm">' + fmt(it.s) + ' - ' + fmt(it.e) + '</span></div>';
       });
       html += '</div>';
     });
-    if (!shown) html += '<div class="empty">Nothing scheduled this week.</div>';
+    if (!lanes.length) html += '<div class="empty">Nothing scheduled this week.</div>';
   });
   if (now >= winA && now < winB) html += '<div class="now" style="left:' + ((now - winA) / span * 100) + '%"></div>';
   document.getElementById("board").innerHTML = html;
@@ -185,8 +205,49 @@ function clock(){
   document.getElementById("clock").textContent = "Server Time " + d.getUTCFullYear() + "-" + pad(d.getUTCMonth()+1) + "-" + pad(d.getUTCDate()) + " " + pad(d.getUTCHours()) + ":" + pad(d.getUTCMinutes()) + ":" + pad(d.getUTCSeconds());
 }
 
+/* ----- popout (hover with mouse, click or tap on any device) ----- */
+var pop = document.getElementById("pop"), pinned = false, popBar = null;
+function showPop(bar, x){
+  var ev = events[+bar.dataset.i]; if (!ev) return;
+  popBar = bar;
+  pop.style.borderColor = COLORHEX[ev.color] || COLORHEX.gold;
+  pop.innerHTML = '<div class="pi">' + esc(ev.icon) + '</div><div><div class="pn">' + esc(ev.name) + '</div>' +
+    '<div class="pt">Starts: ' + fmt(+bar.dataset.s) + '</div><div class="pt">Ends: ' + fmt(+bar.dataset.e) + '</div></div>';
+  pop.classList.add("show");
+  var r = bar.getBoundingClientRect(), w = pop.offsetWidth, h = pop.offsetHeight;
+  var vw = document.documentElement.clientWidth, vh = document.documentElement.clientHeight;
+  var cx = (typeof x === "number") ? x : r.left + r.width / 2;
+  var left = Math.max(8, Math.min(cx - w / 2, vw - w - 8));
+  var top = r.top - h - 8;
+  if (top < 8) top = r.bottom + 8;
+  if (top + h > vh - 8) top = Math.max(8, vh - h - 8);
+  pop.style.left = left + "px"; pop.style.top = top + "px";
+}
+function hidePop(){ pop.classList.remove("show"); pinned = false; popBar = null; }
+
+var board = document.getElementById("board");
+board.addEventListener("pointerover", function(e){
+  if (e.pointerType !== "mouse" || pinned) return;
+  var b = e.target.closest(".bar"); if (b) showPop(b, e.clientX);
+});
+board.addEventListener("pointerout", function(e){
+  if (e.pointerType !== "mouse" || pinned) return;
+  var b = e.target.closest(".bar");
+  if (b && !(e.relatedTarget && b.contains(e.relatedTarget))) hidePop();
+});
+document.addEventListener("click", function(e){
+  var b = e.target.closest ? e.target.closest(".bar") : null;
+  if (b) {
+    if (pinned && popBar === b) { hidePop(); return; }
+    pinned = true; showPop(b, e.clientX);
+  } else {
+    hidePop();
+  }
+});
+document.getElementById("scroll").addEventListener("scroll", hidePop);
+window.addEventListener("resize", hidePop);
+
 /* ----- data ----- */
-function hasLocal(){ try { return localStorage.getItem(KEY) !== null; } catch(e){ return false; } }
 function save(){
   try { localStorage.setItem(KEY, JSON.stringify(events)); } catch(e){}
   document.getElementById("banner").classList.add("show");
@@ -230,7 +291,7 @@ document.getElementById("list").addEventListener("input", function(ev){
   if (["length","every","times"].indexOf(k) >= 0) v = v === "" ? 0 : +v;
   events[i][k] = v;
   if (k === "color") c.className = "card c-" + v;
-  save(); render();
+  save(); hidePop(); render();
   document.getElementById("json").value = JSON.stringify(events, null, 2);
 });
 document.getElementById("list").addEventListener("click", function(ev){
@@ -240,7 +301,7 @@ document.getElementById("list").addEventListener("click", function(ev){
   if (a === "dup") events.splice(i+1, 0, JSON.parse(JSON.stringify(events[i])));
   if (a === "up" && i > 0) events.splice(i-1, 0, events.splice(i,1)[0]);
   if (a === "down" && i < events.length-1) events.splice(i+1, 0, events.splice(i,1)[0]);
-  save(); render(); buildList();
+  save(); hidePop(); render(); buildList();
 });
 document.getElementById("add").onclick = function(){ events.push(blank()); save(); render(); buildList(); var d = document.querySelector(".dbody"); d.scrollTop = d.scrollHeight; };
 document.getElementById("edit").onclick = function(){ document.getElementById("drawer").classList.toggle("open"); };
