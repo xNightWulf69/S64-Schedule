@@ -1,6 +1,6 @@
 [
-  {"name":"Vault Trap 1","icon":"\u1F3E6","section":"Events","color":"teal","start":"2026-10-20T01:00","length":1,"lengthUnit":"days","every":2,"everyUnit":"days","times":0},
-  {"name":"Vault Trap 2","icon":"\u1F3E6","section":"Events","color":"teal","start":"2026-10-20T22:00","length":1,"lengthUnit":"days","every":2,"everyUnit":"days","times":0},
+  {"name":"Vault Trap 1","icon":"🏦","section":"Events","color":"teal","start":"2026-10-20T01:00","length":1,"lengthUnit":"days","every":2,"everyUnit":"days","times":0},
+  {"name":"Vault Trap 2","icon":"🏦","section":"Events","color":"teal","start":"2026-10-20T22:00","length":1,"lengthUnit":"days","every":2,"everyUnit":"days","times":0},
   {"name":"Alliance Mobilization","icon":"\ud83c\udfc6","section":"Events","color":"gold","start":"2026-10-19T00:00","length":7,"lengthUnit":"days","every":14,"everyUnit":"days","times":0},
   {"name":"Alliance Training","icon":"\ud83d\udd28","section":"Events","color":"gold","start":"2026-10-19T00:00","length":7,"lengthUnit":"days","every":14,"everyUnit":"days","times":0},
   {"name":"Hot Pursuit","icon":"\u2b50","section":"Events","color":"green","start":"2026-10-17T00:00","length":3,"lengthUnit":"days","every":0,"everyUnit":"days","times":0},
