@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Event Page</title>
+<style>
+:root{
+  --bg:#2b2622; --bar:#4d4236; --panel:#ece9e0; --sky:#b3d0e8; --head:#68a9e6; --sect:#5f8fbd;
+  --line:#8fb0cf; --ink:#1d2b3a;
+  --gold:#eebb36; --green:#5bb35a; --blue:#3d80d1; --red:#cf4f48; --purple:#8a62c6; --teal:#32a495;
+  --accent:var(--blue);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Trebuchet MS","Segoe UI",Verdana,sans-serif;min-height:100vh}
+.top{background:var(--bar);padding:10px 20px;display:flex;align-items:center;gap:14px;border-bottom:3px solid #382f27}
+.top h1{margin:0;font-size:24px;color:#fff;text-shadow:0 2px 0 #000a;flex:1}
+.btn{display:inline-block;border:0;border-radius:8px;padding:8px 14px;background:#8a6d4f;color:#fff;font-weight:700;cursor:pointer;box-shadow:0 2px 0 #0006;text-decoration:none;font-size:16px}
+.btn:hover{filter:brightness(1.12)}
+.btn:focus-visible{outline:3px solid #fff;outline-offset:1px}
+.btn.gold{background:#e9a53c;color:#2b1d08}
+.page{max-width:1100px;margin:14px auto;padding:0 14px 30px}
+.card{background:var(--panel);border-radius:14px;overflow:hidden;box-shadow:0 4px 0 #0005}
+.hero{background:var(--head);color:#fff;text-align:center;padding:22px 16px;border-bottom:3px solid #4a86c4;text-shadow:0 2px 0 #0007}
+.hero .big{font-size:60px;line-height:1}
+.hero h2{margin:8px 0 0;font-size:38px;font-weight:800}
+.hero p{margin:8px 0 0;font-size:19px;font-weight:600}
+.body{padding:14px 18px 18px}
+.sect{background:var(--sect);color:#fff;font-weight:800;padding:8px 12px;font-size:22px;border-left:8px solid #fff;margin:18px 0 12px;border-radius:2px}
+.sect:first-child{margin-top:4px}
+.sub{font-size:20px;font-weight:800;color:#2f4a6b;margin:16px 0 6px;padding-bottom:3px;border-bottom:3px solid var(--accent)}
+.txt p{font-size:19px;line-height:1.55;margin:0 0 12px}
+.txt a{color:#1d5fb0;font-weight:700}
+.txt ul{margin:0 0 12px;padding-left:26px;font-size:19px;line-height:1.55}
+.txt li{margin-bottom:4px}
+.note{background:#fff3c4;border-left:8px solid #e9a53c;border-radius:6px;padding:10px 14px;font-size:18px;line-height:1.5;margin:0 0 12px;color:#4a3800}
+.links{display:flex;flex-wrap:wrap;gap:10px;margin:4px 0 12px}
+.imgs{display:grid;gap:12px;margin:6px 0 12px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.imgs.full{grid-template-columns:1fr}
+.imgs.two{grid-template-columns:repeat(auto-fill,minmax(min(100%,420px),1fr))}
+figure{margin:0;background:#fff;border:2px solid var(--line);border-radius:10px;overflow:hidden}
+figure img{display:block;width:100%;height:auto;cursor:zoom-in;background:#dbe6f1;min-height:60px}
+figcaption{padding:8px 12px;font-size:16px;font-weight:600;color:#3a4a5a;text-align:center}
+.foot{background:#8fb0d1;color:#38557a;text-align:center;font-weight:700;padding:8px;font-size:16px}
+.lb{position:fixed;inset:0;background:#000d;z-index:50;display:none;flex-direction:column;align-items:center;justify-content:center;padding:14px;cursor:zoom-out}
+.lb.show{display:flex}
+.lb img{max-width:100%;max-height:84vh;border-radius:8px;box-shadow:0 6px 30px #000}
+.lb div{color:#fff;font-size:20px;font-weight:700;margin-top:10px;text-align:center}
+@media (max-width:600px){
+  .hero h2{font-size:28px} .hero .big{font-size:46px} .txt p,.txt ul{font-size:17px} .sect{font-size:19px} .sub{font-size:18px}
+}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>Alliance Event Calendar</h1>
+  <a class="btn" id="back" href="index.html">&lt; Back to calendar</a>
+</div>
+
+<div class="page">
+  <div class="card">
+    <div class="hero" id="hero"></div>
+    <div class="body" id="body"></div>
+    <div class="foot">All events are subject to the in-game schedule</div>
+  </div>
+</div>
+
+<div class="lb" id="lb"><img id="lbimg" alt=""><div id="lbcap"></div></div>
+
+<script>
+/* ==========================================================================
+   EDIT THIS PART ONLY. Everything below the "END OF EDIT AREA" line is the page engine.
+
+   How to use:
+   1. Copy this file and name it after your event (for example vault-trap-1.html).
+   2. Change the info below. Keep the quote marks and commas where they are.
+   3. The page content is the "content" list. It shows from top to bottom, in the same
+      order you write it. Each { ... } line is ONE block, and you can use as many of
+      each kind as you like, in any order. Every block ends with a comma (except the last).
+
+      Block kinds:
+        { heading: "Big blue heading" },
+        { subheading: "Smaller heading with an underline" },
+        { text: "A paragraph" },
+        { text: ["Paragraph one", "Paragraph two"] },
+        { bullets: ["Point one", "Point two"] },
+        { note: "Yellow tip box" },
+        { images: [ { src: "images/map.png", caption: "Optional caption" } ], layout: "grid" },
+        { links: [ { text: "Button text", url: "https://example.com" } ] },
+
+      Image layout: "grid" = small tiles, "two" = two per row, "full" = one big image per row.
+   4. In text you can use basic HTML: <b>bold</b>, <i>italic</i>, <a href="https://...">link</a>.
+   5. Image "src" can be a web link (https://...) or a file in your repo (for example images/map.png).
+   6. Emoji: you can paste them directly.
+   ========================================================================== */
+var PAGE = {
+
+  title:    "Oil Field Strike",           /* big title and browser tab name */
+  icon:     "\ud83d\udee2\ufe0f",         /* emoji shown above the title */
+  subtitle: "Farm soldiers, collect loot and rank top 20",
+  color:    "red",                        /* header accent: blue, gold, green, red, purple or teal */
+  back:     "index.html",                 /* where the Back button goes */
+
+  content: [
+
+    { heading: "How to: Oil Field Strike" },
+    { bullets: [
+        "Kill patrols until all your skills are levelled up.",
+        "Attack mine guards and gather the loot they drop. Repeat this process.",
+        "Once the veins open, occupy as many of them as possible.",
+        "Teleport around to new mines or less crowded spaces. Keep hitting guards in mines and collecting dropped loot. Don't forget to steal loot from others.",
+        "Gather once all the vein outbursts are done and every mine has been hit."
+      ]
+    },
+    { note: "<b>Best skill order:</b> Right, Right, Left, Left, Right" },
+
+    { heading: "Key takeaways and strategy guide" },
+
+    { subheading: "1. Core strategy and goal" },
+    { text: "High-level players often dominate the level 3 gathering veins. This strategy focuses on scoring high and ranking top 20 <b>without</b> fighting over occupied veins or gathering continuously." },
+    { text: "The main objective is to farm Cesaris / Sarasis soldiers, collect loot, and make the most of the occupancy bonus." },
+
+    { subheading: "2. Skill tree progression" },
+    { bullets: [
+        "<b>First two skills (right side):</b> increase march speed and grant ore for defeating Cesaris soldiers.",
+        "<b>Next two skills (left side):</b> grant 5,000 extra ore each time you occupy a vein, plus increased gathering efficiency.",
+        "<b>Final skill (right side):</b> a gathering boost to activate during Fractured Vein events."
+      ]
+    },
+
+    { subheading: "3. The 1-minute vein occupancy rotation" },
+    { text: "Once you unlock the left skill, you receive 5,000 ore just for occupying a vein once per minute." },
+    { bullets: [
+        "Send a march to occupy a nearby vein.",
+        "Wait until the 5,000 bonus triggers, then immediately pull the troops back.",
+        "Repeat this roughly every 60 seconds while your main marches stay focused on hunting soldiers."
+      ]
+    },
+    { note: "Fractured Veins do not always trigger the 5,000 occupancy bonus automatically, so keep up the 1-minute rotation on standard veins even during Fractured Vein events." },
+
+    { subheading: "4. Fractured Veins and the late game" },
+    { bullets: [
+        "When Fractured Veins appear, use your active speed and gathering boosts and send all available marches to gather them quickly for fast points.",
+        "In the final few minutes, keep hitting nearby soldiers and trigger one last vein occupancy for bonus points."
+      ]
+    }
+
+  ]
+};
+/* ============================ END OF EDIT AREA ============================ */
+
+
+(function(){
+  var COLORS = {blue:"#3d80d1", gold:"#eebb36", green:"#5bb35a", red:"#cf4f48", purple:"#8a62c6", teal:"#32a495"};
+  var hero = document.getElementById("hero"), body = document.getElementById("body");
+
+  function el(tag, cls, html){
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (html != null) e.innerHTML = html;
+    return e;
+  }
+  function plain(tag, cls, text){
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    e.textContent = text;
+    return e;
+  }
+  function list(v){ return v == null ? [] : (Array.isArray(v) ? v : [v]); }
+
+  document.title = PAGE.title || "Event Page";
+  document.getElementById("back").href = PAGE.back || "index.html";
+  if (COLORS[PAGE.color]) document.documentElement.style.setProperty("--accent", COLORS[PAGE.color]);
+  hero.style.background = COLORS[PAGE.color] || COLORS.blue;
+  if (PAGE.icon) hero.appendChild(plain("div", "big", PAGE.icon));
+  hero.appendChild(plain("h2", "", PAGE.title || ""));
+  if (PAGE.subtitle) hero.appendChild(plain("p", "", PAGE.subtitle));
+
+  var lb = document.getElementById("lb");
+  function openLb(im){
+    document.getElementById("lbimg").src = im.src;
+    document.getElementById("lbcap").textContent = im.caption || "";
+    lb.classList.add("show");
+  }
+  lb.addEventListener("click", function(){ lb.classList.remove("show"); });
+  document.addEventListener("keydown", function(e){ if (e.key === "Escape") lb.classList.remove("show"); });
+
+  (PAGE.content || []).forEach(function(b){
+    if (b.heading) body.appendChild(plain("div", "sect", b.heading));
+    if (b.subheading) body.appendChild(plain("div", "sub", b.subheading));
+
+    if (b.text != null || b.bullets || b.note) {
+      var wrap = el("div", "txt");
+      list(b.text).forEach(function(t){ wrap.appendChild(el("p", "", t)); });
+      if (b.bullets && b.bullets.length) {
+        var ul = el("ul");
+        b.bullets.forEach(function(x){ ul.appendChild(el("li", "", x)); });
+        wrap.appendChild(ul);
+      }
+      if (b.note) wrap.appendChild(el("div", "note", b.note));
+      body.appendChild(wrap);
+    }
+
+    if (b.images && b.images.length) {
+      var g = el("div", "imgs" + (b.layout === "full" ? " full" : b.layout === "two" ? " two" : ""));
+      b.images.forEach(function(im){
+        var f = el("figure"), img = document.createElement("img");
+        img.src = im.src; img.alt = im.caption || ""; img.loading = "lazy";
+        img.addEventListener("click", function(){ openLb(im); });
+        f.appendChild(img);
+        if (im.caption) f.appendChild(plain("figcaption", "", im.caption));
+        g.appendChild(f);
+      });
+      body.appendChild(g);
+    }
+
+    if (b.links && b.links.length) {
+      var l = el("div", "links");
+      b.links.forEach(function(k){
+        var a = plain("a", "btn gold", k.text || k.url);
+        a.href = k.url; a.target = "_blank"; a.rel = "noopener";
+        l.appendChild(a);
+      });
+      body.appendChild(l);
+    }
+  });
+})();
+</script>
+</body>
+</html>
